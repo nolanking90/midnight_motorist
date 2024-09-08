@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.14.1", features = ["dynamic_linking", "mp3", "wav"] }
+bevy = { version = "0.14.1", features = ["mp3", "wav"] }
 log = { version = "*", features = ["max_level_debug", "release_max_level_warn"] }
 bevy-inspector-egui = "*"
 bevy_screen_diagnostics = "*"
