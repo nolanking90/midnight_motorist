@@ -74,7 +74,7 @@ fn spawn_background(mut commands: Commands, asset_server: Res<AssetServer>) {
         ImageScaleMode::Tiled {
             tile_x: true,
             tile_y: false,
-            stretch_value: 1.0,
+            stretch_value: 1.0 / WINSCALE,
         },
         Background,
     ));
@@ -95,7 +95,7 @@ fn spawn_background(mut commands: Commands, asset_server: Res<AssetServer>) {
         ImageScaleMode::Tiled {
             tile_x: false,
             tile_y: false,
-            stretch_value: 1.0,
+            stretch_value: 1.0 / WINSCALE,
         },
         Background,
     ));
@@ -138,7 +138,7 @@ fn update_background(
             ImageScaleMode::Tiled {
                 tile_x: true,
                 tile_y: false,
-                stretch_value: 1.0,
+                stretch_value: 1.0 / WINSCALE,
             },
             Background,
         ));
@@ -170,8 +170,11 @@ fn spawn_car(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands.spawn((
         SpriteBundle {
-            sprite: Sprite { 
-                custom_size: Some(Vec2 { x: CARWIDTH, y: CARHEIGHT}),
+            sprite: Sprite {
+                custom_size: Some(Vec2 {
+                    x: CARWIDTH,
+                    y: CARHEIGHT,
+                }),
                 ..default()
             },
             texture: texture_list[0].clone(),
@@ -311,6 +314,31 @@ fn spawn_score(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..Default::default()
     });
     commands.spawn(Score { digits });
+}
+
+fn update_laps(
+    mut commands: Commands,
+    camera: Query<&Transform, With<CameraMarker>>,
+    score: Query<&Score>,
+) {
+    let digit = camera.single().translation.x / (WINWIDTH * WINSCALE) / 10.0;
+
+    commands.spawn(ImageBundle {
+        style: Style {
+            position_type: PositionType::Absolute,
+            margin: UiRect::horizontal(Val::Auto),
+            top: Val::Percent(50.0 / 1080.0 * 100.0),
+            left: Val::Percent(10.0 / 1920.0 * 100.0 + 5.0),
+            width: Val::Percent(3.0),
+            height: Val::Percent(5.0),
+            ..Default::default()
+        },
+        image: UiImage {
+            texture: score.single().digits[digit as usize].clone(),
+            ..default()
+        },
+        ..Default::default()
+    });
 }
 
 fn update_score(
@@ -512,5 +540,6 @@ fn main() {
         .add_systems(Update, update_score)
         .add_systems(Update, camera_tracking)
         .add_systems(Update, detect_collision)
+        .add_systems(Update, update_laps)
         .run();
 }
