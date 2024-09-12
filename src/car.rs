@@ -53,7 +53,7 @@ pub fn spawn_car(
             speed: Vec2 { x: 0.0, y: YSPEED },
             score: 0.0,
             state: CarState::Moving,
-            frame_timer: Timer::new(Duration::from_secs_f32(3.0), TimerMode::Repeating),
+            frame_timer: Timer::new(Duration::from_secs_f32(1.0), TimerMode::Repeating),
             sprite_index: 0,
             texture_list,
             position: Vec3 {
