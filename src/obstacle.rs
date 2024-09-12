@@ -86,9 +86,6 @@ pub fn spawn_new_obstacles(
     ));
 }
 
-#[derive(Component)]
-pub struct CrashSound;
-
 pub fn detect_collision(
     mut commands: Commands,
     mut car: Query<(&mut Car, &Transform), Without<Obstacle>>,
@@ -107,13 +104,10 @@ pub fn detect_collision(
         {
             car.single_mut().0.state = CarState::Crashed;
             commands.entity(obstacle.0).despawn();
-            commands.spawn((
-                AudioBundle {
-                    source: asset_server.load("crash.wav"),
-                    settings: PlaybackSettings::DESPAWN,
-                },
-                CrashSound,
-            ));
+            commands.spawn(AudioBundle {
+                source: asset_server.load("crash.wav"),
+                settings: PlaybackSettings::DESPAWN,
+            });
         }
     }
 }
