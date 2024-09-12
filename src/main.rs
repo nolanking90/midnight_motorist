@@ -11,25 +11,17 @@ use car::*;
 mod obstacle;
 use obstacle::*;
 
-const WINSCALE: f32 = 1.5;
-const WINWIDTH: f32 = 1920.0 / WINSCALE;
-const WINHEIGHT: f32 = 1080.0 / WINSCALE;
-const CARHEIGHT: f32 = 105.0 / WINSCALE;
-const CARWIDTH: f32 = 135.0 / WINSCALE;
-const YSPEED: f32 = 1000.0;
-const OBSTACLE_WIDTH: f32 = 135.0 / WINSCALE;
-const OBSTACLE_HEIGHT: f32 = 106.0 / WINSCALE;
-const Y_VALUES: [f32; 4] = [
-    (OBSTACLE_HEIGHT / 2.0) + 20.0,
-    135.0 + (OBSTACLE_HEIGHT / 2.0) + 10.0,
-    2.0 * 135.0 + (OBSTACLE_HEIGHT / 2.0) + 15.0,
-    3.0 * 135.0 + (OBSTACLE_HEIGHT / 2.0) - 10.0,
-];
-
 #[derive(Component)]
 struct Background;
 
-fn spawn_background(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn spawn_background(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    window: Query<&Window>,
+) {
+    let width = window.single().width();
+    let height = window.single().height();
+
     commands.spawn((Camera2dBundle::default(), CameraMarker));
     commands.spawn(ImageBundle {
         style: Style {
@@ -68,8 +60,8 @@ fn spawn_background(mut commands: Commands, asset_server: Res<AssetServer>) {
             texture: asset_server.load("1058.png"), // Background
             sprite: Sprite {
                 custom_size: Some(Vec2 {
-                    x: WINWIDTH * 3.0,
-                    y: WINHEIGHT,
+                    x: width * 3.0,
+                    y: height,
                 }),
                 anchor: bevy::sprite::Anchor::CenterLeft,
                 ..default()
@@ -80,7 +72,7 @@ fn spawn_background(mut commands: Commands, asset_server: Res<AssetServer>) {
         ImageScaleMode::Tiled {
             tile_x: true,
             tile_y: false,
-            stretch_value: 1.0 / WINSCALE,
+            stretch_value: height / 1080.0,
         },
         Background,
     ));
@@ -89,19 +81,19 @@ fn spawn_background(mut commands: Commands, asset_server: Res<AssetServer>) {
             texture: asset_server.load("1058.png"), // Background
             sprite: Sprite {
                 custom_size: Some(Vec2 {
-                    x: WINWIDTH,
-                    y: WINHEIGHT,
+                    x: width,
+                    y: height,
                 }),
                 anchor: bevy::sprite::Anchor::CenterLeft,
                 ..default()
             },
-            transform: Transform::from_xyz(WINWIDTH * -1.0, 0.0, 0.0),
+            transform: Transform::from_xyz(width * -1.0, 0.0, 0.0),
             ..default()
         },
         ImageScaleMode::Tiled {
             tile_x: false,
             tile_y: false,
-            stretch_value: 1.0 / WINSCALE,
+            stretch_value: height / 1080.0,
         },
         Background,
     ));
@@ -112,9 +104,13 @@ fn update_background(
     asset_server: Res<AssetServer>,
     camera: Query<&Transform, (With<CameraMarker>, Without<Background>)>,
     backgrounds: Query<(Entity, &Transform), (With<Background>, Without<CameraMarker>)>,
+    window: Query<&Window>,
 ) {
+    let width = window.single().width();
+    let height = window.single().height();
+
     for (background_entity, background_transform) in backgrounds.iter() {
-        if background_transform.translation.x < camera.single().translation.x - WINWIDTH * 4.0 {
+        if background_transform.translation.x < camera.single().translation.x - width * 4.0 {
             commands.entity(background_entity).despawn();
         }
     }
@@ -122,26 +118,26 @@ fn update_background(
         background_transform.translation.x > camera.single().translation.x
     });
     if !road_remaining {
-        let road_length_factor = (camera.single().translation.x / (WINWIDTH * 3.0)).floor() + 1.0;
+        let road_length_factor = (camera.single().translation.x / (width  * 3.0)).floor() + 1.0;
 
         commands.spawn((
             SpriteBundle {
                 texture: asset_server.load("1058.png"), // Background
                 sprite: Sprite {
                     custom_size: Some(Vec2 {
-                        x: WINWIDTH * 3.0,
-                        y: WINHEIGHT,
+                        x: width  * 3.0,
+                        y: height,
                     }),
                     anchor: bevy::sprite::Anchor::CenterLeft,
                     ..default()
                 },
-                transform: Transform::from_xyz(road_length_factor * 3.0 * WINWIDTH, 0.0, 0.0),
+                transform: Transform::from_xyz(road_length_factor * 3.0 * width, 0.0, 0.0),
                 ..default()
             },
             ImageScaleMode::Tiled {
                 tile_x: true,
                 tile_y: false,
-                stretch_value: 1.0 / WINSCALE,
+                stretch_value: height / 1080.0,
             },
             Background,
         ));
@@ -154,7 +150,7 @@ fn main() {
             primary_window: Some(Window {
                 title: "Midnight Motorist".into(),
                 name: Some("Midnight Motorist".into()),
-                resolution: (WINWIDTH, WINHEIGHT).into(),
+                resolution: (1280.0, 720.0).into(),
                 // present_mode: PresentMode::AutoNoVsync,
                 enabled_buttons: bevy::window::EnabledButtons {
                     maximize: false,

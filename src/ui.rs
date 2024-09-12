@@ -1,6 +1,6 @@
 use bevy::{prelude::*, time::Time};
 
-use crate::{Car, WINSCALE, WINWIDTH};
+use crate::Car ;
 
 #[derive(Component)]
 pub struct CameraMarker;
@@ -54,8 +54,10 @@ pub fn update_laps(
     mut commands: Commands,
     camera: Query<&Transform, With<CameraMarker>>,
     score: Query<&Score>,
+    window: Query<&Window>,
 ) {
-    let digit = camera.single().translation.x / (WINWIDTH * WINSCALE) / 10.0;
+    let width = window.single().width();
+    let digit = camera.single().translation.x / (width) / 10.0;
 
     commands.spawn(ImageBundle {
         style: Style {
@@ -81,16 +83,18 @@ pub fn update_score(
     score: Query<&Score>,
     prev_score_digits: Query<Entity, With<ScoreDigit>>,
     prev_speed_digits: Query<Entity, With<SpeedDigit>>,
+    window: Query<&Window>,
 ) {
     for prev_digit in prev_score_digits.iter() {
         commands.entity(prev_digit).despawn();
     }
 
+    let width = window.single().width();
     let player_score = cars.single().score.floor() as u32;
     let score_string = player_score.to_string();
     let temp = score_string.chars();
     let num_digits = temp.clone().count();
-    let mut left_pos = WINWIDTH - 10.0 - (0.03 * WINWIDTH * num_digits as f32);
+    let mut left_pos = width - 10.0 - (0.03 * width * num_digits as f32);
 
     for char in temp {
         let digit = char.to_digit(10).unwrap_or_default();
@@ -113,7 +117,7 @@ pub fn update_score(
             },
             ScoreDigit,
         ));
-        left_pos += 0.03 * WINWIDTH;
+        left_pos += 0.03 * width;
     }
 
     for prev_digit in prev_speed_digits.iter() {
@@ -123,7 +127,7 @@ pub fn update_score(
     let player_speed = (cars.single().speed.x / 10.0).floor() as u32;
     let speed_string = player_speed.to_string();
     let temp = speed_string.chars();
-    let mut left_pos = 20.0 + 0.06 * WINWIDTH;
+    let mut left_pos = 20.0 + 0.06 * width;
 
     for char in temp {
         let digit = char.to_digit(10).unwrap_or_default();
@@ -146,7 +150,7 @@ pub fn update_score(
             },
             SpeedDigit,
         ));
-        left_pos += 0.03 * WINWIDTH;
+        left_pos += 0.03 * width;
     }
 }
 

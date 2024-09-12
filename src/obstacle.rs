@@ -1,7 +1,21 @@
 use bevy::prelude::*;
 use rand::prelude::*;
 
-use crate::{CameraMarker, Car, CarState, CARHEIGHT, CARWIDTH, OBSTACLE_HEIGHT, OBSTACLE_WIDTH, WINWIDTH, Y_VALUES};
+use crate::{CameraMarker, Car, CarState};
+
+const WINSCALE: f32 = 1.5;
+
+const CARHEIGHT: f32 = 105.0 / WINSCALE;
+const CARWIDTH: f32 = 135.0 / WINSCALE;
+
+const OBSTACLE_WIDTH: f32 = 135.0 / WINSCALE;
+const OBSTACLE_HEIGHT: f32 = 106.0 / WINSCALE;
+const Y_VALUES: [f32; 4] = [
+    (OBSTACLE_HEIGHT / 2.0) + 20.0,
+    135.0 + (OBSTACLE_HEIGHT / 2.0) + 10.0,
+    2.0 * 135.0 + (OBSTACLE_HEIGHT / 2.0) + 15.0,
+    3.0 * 135.0 + (OBSTACLE_HEIGHT / 2.0) - 10.0,
+];
 
 #[derive(Component)]
 pub struct Obstacle {
@@ -13,9 +27,11 @@ pub fn update_obstacles(
     mut obstacles: Query<(Entity, &Obstacle, &mut Transform), Without<CameraMarker>>,
     camera: Query<&Transform, (With<CameraMarker>, Without<Obstacle>)>,
     time: Res<Time>,
+    window: Query<&Window>,
 ) {
+    let width = window.single().width();
     for (obstacle_entity, obstacle, mut obstacle_transform) in obstacles.iter_mut() {
-        if obstacle_transform.translation.x < camera.single().translation.x - WINWIDTH / 2.0 {
+        if obstacle_transform.translation.x < camera.single().translation.x - width / 2.0 {
             commands.entity(obstacle_entity).despawn();
         } else {
             obstacle_transform.translation.x += obstacle.speed * time.delta_seconds();
@@ -28,15 +44,17 @@ pub fn spawn_new_obstacles(
     obstacles: Query<&Transform, (With<Obstacle>, Without<CameraMarker>)>,
     camera: Query<&Transform, (With<CameraMarker>, Without<Obstacle>)>,
     asset_server: Res<AssetServer>,
+    window: Query<&Window>,
 ) {
+    let width = window.single().width();
     if obstacles.iter().count() > 10 {
         return;
     }
 
-    let offset = camera.single().translation.x + WINWIDTH;
+    let offset = camera.single().translation.x + width;
 
     let mut rng = thread_rng();
-    let x_pos = rand::random::<f32>() * WINWIDTH + OBSTACLE_WIDTH / 2.0 + offset;
+    let x_pos = rand::random::<f32>() * width + OBSTACLE_WIDTH / 2.0 + offset;
     let parity = (-1.0_f32).powi(rng.gen_range(0..10));
     // let y_pos = parity * rng.gen_range((OBSTACLE_HEIGHT / 2.0 + 20.0)..Y_ABS_RANGE);
     let y_pos = parity * Y_VALUES[rng.gen_range(0..4)];

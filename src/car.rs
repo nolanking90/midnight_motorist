@@ -2,8 +2,13 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 use bevy::time::Timer;
-use crate::{CameraMarker, CARHEIGHT, CARWIDTH, WINHEIGHT, WINWIDTH, YSPEED};
+use crate::CameraMarker;
 
+const WINSCALE: f32 = 1.5;
+
+const CARHEIGHT: f32 = 105.0 / WINSCALE;
+const CARWIDTH: f32 = 135.0 / WINSCALE;
+const YSPEED: f32 = 1000.0;
 
 #[derive(Component)]
 pub struct Car {
@@ -22,7 +27,10 @@ pub enum CarState {
     Crashed,
 }
 
-pub fn spawn_car(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn spawn_car(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
     let mut texture_list: Vec<Handle<Image>> = Vec::new();
     for n in 0..20 {
         texture_list.push(asset_server.load((1084 + n).to_string() + ".png"));
@@ -62,37 +70,41 @@ pub fn update_car(
     time: Res<Time>,
     mut cars: Query<(&mut Car, &mut Transform, &mut Handle<Image>), Without<CameraMarker>>,
     camera: Query<&Transform, With<CameraMarker>>,
+    window: Query<&Window>,
 ) {
+    let width = window.single().width();
+    let height = window.single().height();
+
     for (mut car, mut transform, mut sprite) in cars.iter_mut() {
         match car.state {
             CarState::Moving => {
                 if button_input.pressed(KeyCode::KeyW) || button_input.pressed(KeyCode::ArrowUp) {
                     car.position.y += car.speed.y * time.delta_seconds();
                     car.position.y = car.position.y.clamp(
-                        -WINHEIGHT / 2.0 + CARHEIGHT / 2.0,
-                        WINHEIGHT / 2.0 - CARHEIGHT / 2.0,
+                        -height / 2.0 + CARHEIGHT / 2.0,
+                        height / 2.0 - CARHEIGHT / 2.0,
                     );
                 }
                 if button_input.pressed(KeyCode::KeyS) || button_input.pressed(KeyCode::ArrowDown) {
                     car.position.y -= car.speed.y * time.delta_seconds();
                     car.position.y = car.position.y.clamp(
-                        -WINHEIGHT / 2.0 + CARHEIGHT / 2.0,
-                        WINHEIGHT / 2.0 - CARHEIGHT / 2.0,
+                        -height / 2.0 + CARHEIGHT / 2.0,
+                        height / 2.0 - CARHEIGHT / 2.0,
                     );
                 }
                 if button_input.pressed(KeyCode::KeyD) || button_input.pressed(KeyCode::ArrowRight)
                 {
                     car.position.x += car.speed.y * time.delta_seconds();
                     car.position.x = car.position.x.clamp(
-                        camera.single().translation.x - WINWIDTH / 4.0,
-                        camera.single().translation.x + WINWIDTH / 4.0,
+                        camera.single().translation.x - width / 4.0,
+                        camera.single().translation.x + width / 4.0,
                     );
                 }
                 if button_input.pressed(KeyCode::KeyA) || button_input.pressed(KeyCode::ArrowLeft) {
                     car.position.x -= car.speed.y * time.delta_seconds();
                     car.position.x = car.position.x.clamp(
-                        camera.single().translation.x - WINWIDTH / 4.0,
-                        camera.single().translation.x + WINWIDTH / 4.0,
+                        camera.single().translation.x - width / 4.0,
+                        camera.single().translation.x + width / 4.0,
                     );
                 }
 
