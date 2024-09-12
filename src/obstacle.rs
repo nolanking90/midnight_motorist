@@ -56,7 +56,6 @@ pub fn spawn_new_obstacles(
     let mut rng = thread_rng();
     let x_pos = rand::random::<f32>() * width + OBSTACLE_WIDTH / 2.0 + offset;
     let parity = (-1.0_f32).powi(rng.gen_range(0..10));
-    // let y_pos = parity * rng.gen_range((OBSTACLE_HEIGHT / 2.0 + 20.0)..Y_ABS_RANGE);
     let y_pos = parity * y_values[rng.gen_range(0..4)];
     let speed = parity * 100.0;
 
@@ -68,9 +67,7 @@ pub fn spawn_new_obstacles(
     }
 
     commands.spawn((
-        Obstacle {
-            speed,
-        },
+        Obstacle { speed },
         SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2 {
@@ -89,6 +86,9 @@ pub fn spawn_new_obstacles(
     ));
 }
 
+#[derive(Component)]
+pub struct CrashSound;
+
 pub fn detect_collision(
     mut commands: Commands,
     mut car: Query<(&mut Car, &Transform), Without<Obstacle>>,
@@ -98,6 +98,7 @@ pub fn detect_collision(
 ) {
     let window_scale = 1080.0 / window.single().height();
     let car_pos = car.single().1.translation;
+
     for obstacle in obstacles.iter() {
         if (obstacle.1.translation.x - car_pos.x).abs()
             <= 0.95 * ((CARWIDTH + OBSTACLE_WIDTH) / window_scale) / 2.0
@@ -106,10 +107,13 @@ pub fn detect_collision(
         {
             car.single_mut().0.state = CarState::Crashed;
             commands.entity(obstacle.0).despawn();
-            commands.spawn(AudioBundle {
-                source: asset_server.load("crash.wav"),
-                settings: PlaybackSettings::ONCE,
-            });
+            commands.spawn((
+                AudioBundle {
+                    source: asset_server.load("crash.wav"),
+                    settings: PlaybackSettings::DESPAWN,
+                },
+                CrashSound,
+            ));
         }
     }
 }
