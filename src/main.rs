@@ -118,14 +118,14 @@ fn update_background(
         background_transform.translation.x > camera.single().translation.x
     });
     if !road_remaining {
-        let road_length_factor = (camera.single().translation.x / (width  * 3.0)).floor() + 1.0;
+        let road_length_factor = (camera.single().translation.x / (width * 3.0)).floor() + 1.0;
 
         commands.spawn((
             SpriteBundle {
                 texture: asset_server.load("1058.png"), // Background
                 sprite: Sprite {
                     custom_size: Some(Vec2 {
-                        x: width  * 3.0,
+                        x: width * 3.0,
                         y: height,
                     }),
                     anchor: bevy::sprite::Anchor::CenterLeft,
@@ -156,6 +156,7 @@ fn main() {
                     maximize: false,
                     ..Default::default()
                 },
+                resizable: false,
                 ..default()
             }),
             ..default()

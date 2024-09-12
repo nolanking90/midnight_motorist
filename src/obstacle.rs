@@ -6,8 +6,8 @@ use crate::{CameraMarker, Car, CarState};
 const CARHEIGHT: f32 = 105.0;
 const CARWIDTH: f32 = 135.0;
 
+const OBSTACLE_HEIGHT: f32 = 105.0;
 const OBSTACLE_WIDTH: f32 = 135.0;
-const OBSTACLE_HEIGHT: f32 = 106.0;
 
 #[derive(Component)]
 pub struct Obstacle {
@@ -41,10 +41,10 @@ pub fn spawn_new_obstacles(
     let width = window.single().width();
     let window_scale = 1080.0 / window.single().height();
     let y_values = [
-        (OBSTACLE_HEIGHT / window_scale / 2.0) + 20.0,
-        135.0 + (OBSTACLE_HEIGHT / window_scale / 2.0) + 10.0,
-        2.0 * 135.0 + (OBSTACLE_HEIGHT / window_scale / 2.0) + 15.0,
-        3.0 * 135.0 + (OBSTACLE_HEIGHT / window_scale / 2.0) - 10.0,
+        (OBSTACLE_HEIGHT / 2.0 + 20.0) / window_scale,
+        (135.0 + OBSTACLE_HEIGHT / 2.0 + 10.0) / window_scale,
+        (2.0 * 135.0 + OBSTACLE_HEIGHT / 2.0 + 15.0) / window_scale,
+        (3.0 * 135.0 + OBSTACLE_HEIGHT / 2.0 - 10.0) / window_scale,
     ];
 
     if obstacles.iter().count() > 10 {
@@ -100,9 +100,9 @@ pub fn detect_collision(
     let car_pos = car.single().1.translation;
     for obstacle in obstacles.iter() {
         if (obstacle.1.translation.x - car_pos.x).abs()
-            <= (CARWIDTH + OBSTACLE_WIDTH / window_scale) / 2.0
+            <= 0.95 * ((CARWIDTH + OBSTACLE_WIDTH) / window_scale) / 2.0
             && (obstacle.1.translation.y - car_pos.y).abs()
-                <= (CARHEIGHT + OBSTACLE_HEIGHT / window_scale) / 2.0
+                <= 0.90 * ((CARHEIGHT + OBSTACLE_HEIGHT) / window_scale) / 2.0
         {
             car.single_mut().0.state = CarState::Crashed;
             commands.entity(obstacle.0).despawn();

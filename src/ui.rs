@@ -64,7 +64,7 @@ pub fn update_laps(
             position_type: PositionType::Absolute,
             margin: UiRect::horizontal(Val::Auto),
             top: Val::Percent(50.0 / 1080.0 * 100.0),
-            left: Val::Percent(10.0 / 1920.0 * 100.0 + 5.0),
+            left: Val::Percent(7.5),
             width: Val::Percent(3.0),
             height: Val::Percent(5.0),
             ..Default::default()
