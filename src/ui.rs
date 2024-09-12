@@ -22,9 +22,6 @@ pub struct Score {
 #[derive(Component)]
 pub struct ScoreDigit;
 
-#[derive(Component)]
-pub struct SpeedDigit;
-
 pub fn spawn_score(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut digits: Vec<Handle<Image>> = Vec::new();
     for n in 0..10 {
@@ -50,6 +47,48 @@ pub fn spawn_score(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Score { digits });
 }
 
+pub fn update_score(
+    mut commands: Commands,
+    cars: Query<&Car>,
+    score: Query<&Score>,
+    prev_score_digits: Query<Entity, With<ScoreDigit>>,
+    window: Query<&Window>,
+) {
+    for prev_digit in prev_score_digits.iter() {
+        commands.entity(prev_digit).despawn();
+    }
+
+    let width = window.single().width();
+    let player_score = cars.single().score.floor() as u32;
+    let score_string = player_score.to_string();
+    let temp = score_string.chars();
+    let num_digits = temp.clone().count();
+    let mut left_pos = width - 10.0 - (0.03 * width * num_digits as f32);
+
+    for char in temp {
+        let digit = char.to_digit(10).unwrap_or_default();
+        commands.spawn((
+            ImageBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    margin: UiRect::horizontal(Val::Auto),
+                    top: Val::Percent(50.0 / 1080.0 * 100.0),
+                    left: Val::Px(left_pos),
+                    width: Val::Percent(3.0),
+                    height: Val::Percent(5.0),
+                    ..Default::default()
+                },
+                image: UiImage {
+                    texture: score.single().digits[digit as usize].clone(),
+                    ..default()
+                },
+                ..Default::default()
+            },
+            ScoreDigit,
+        ));
+        left_pos += 0.03 * width;
+    }
+}
 
 #[derive(Component)]
 pub struct LapsDigit;
@@ -89,48 +128,19 @@ pub fn update_laps(
     ));
 }
 
-pub fn update_score(
+
+#[derive(Component)]
+pub struct SpeedDigit;
+
+pub fn update_speed(
     mut commands: Commands,
     cars: Query<&Car>,
     score: Query<&Score>,
-    prev_score_digits: Query<Entity, With<ScoreDigit>>,
     prev_speed_digits: Query<Entity, With<SpeedDigit>>,
     window: Query<&Window>,
 ) {
-    for prev_digit in prev_score_digits.iter() {
-        commands.entity(prev_digit).despawn();
-    }
 
     let width = window.single().width();
-    let player_score = cars.single().score.floor() as u32;
-    let score_string = player_score.to_string();
-    let temp = score_string.chars();
-    let num_digits = temp.clone().count();
-    let mut left_pos = width - 10.0 - (0.03 * width * num_digits as f32);
-
-    for char in temp {
-        let digit = char.to_digit(10).unwrap_or_default();
-        commands.spawn((
-            ImageBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    margin: UiRect::horizontal(Val::Auto),
-                    top: Val::Percent(50.0 / 1080.0 * 100.0),
-                    left: Val::Px(left_pos),
-                    width: Val::Percent(3.0),
-                    height: Val::Percent(5.0),
-                    ..Default::default()
-                },
-                image: UiImage {
-                    texture: score.single().digits[digit as usize].clone(),
-                    ..default()
-                },
-                ..Default::default()
-            },
-            ScoreDigit,
-        ));
-        left_pos += 0.03 * width;
-    }
 
     for prev_digit in prev_speed_digits.iter() {
         commands.entity(prev_digit).despawn();

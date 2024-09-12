@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+//use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 
 mod ui;
@@ -163,7 +163,7 @@ fn main() {
         }))
         .add_plugins(ScreenDiagnosticsPlugin::default())
         .add_plugins(ScreenFrameDiagnosticsPlugin)
-         .add_plugins(WorldInspectorPlugin::new())
+        //.add_plugins(WorldInspectorPlugin::new())
         .add_systems(Startup, spawn_background)
         .add_systems(Startup, spawn_car)
         .add_systems(Startup, spawn_score)
@@ -176,5 +176,6 @@ fn main() {
         .add_systems(Update, camera_tracking)
         .add_systems(Update, detect_collision)
         .add_systems(Update, update_laps)
+        .add_systems(Update, update_speed)
         .run();
 }
