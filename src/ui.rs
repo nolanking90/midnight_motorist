@@ -50,31 +50,43 @@ pub fn spawn_score(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Score { digits });
 }
 
+
+#[derive(Component)]
+pub struct LapsDigit;
+
 pub fn update_laps(
     mut commands: Commands,
     camera: Query<&Transform, With<CameraMarker>>,
     score: Query<&Score>,
     window: Query<&Window>,
+    prev_laps_digit: Query<Entity, With<LapsDigit>>,
 ) {
     let width = window.single().width();
     let digit = camera.single().translation.x / (width) / 10.0;
 
-    commands.spawn(ImageBundle {
-        style: Style {
-            position_type: PositionType::Absolute,
-            margin: UiRect::horizontal(Val::Auto),
-            top: Val::Percent(50.0 / 1080.0 * 100.0),
-            left: Val::Percent(7.5),
-            width: Val::Percent(3.0),
-            height: Val::Percent(5.0),
+    for prev_digit in prev_laps_digit.iter() {
+        commands.entity(prev_digit).despawn();
+    }
+
+    commands.spawn((
+        ImageBundle {
+            style: Style {
+                position_type: PositionType::Absolute,
+                margin: UiRect::horizontal(Val::Auto),
+                top: Val::Percent(50.0 / 1080.0 * 100.0),
+                left: Val::Percent(7.5),
+                width: Val::Percent(3.0),
+                height: Val::Percent(5.0),
+                ..Default::default()
+            },
+            image: UiImage {
+                texture: score.single().digits[digit as usize].clone(),
+                ..default()
+            },
             ..Default::default()
         },
-        image: UiImage {
-            texture: score.single().digits[digit as usize].clone(),
-            ..default()
-        },
-        ..Default::default()
-    });
+        LapsDigit
+    ));
 }
 
 pub fn update_score(
