@@ -1,13 +1,10 @@
 use bevy::prelude::*;
 use rand::prelude::*;
 
-use crate::{CameraMarker, Car, CarState};
+use crate::{CameraMarker, Car, CarState, LevelAssets};
 
 const CARHEIGHT: f32 = 105.0;
 const CARWIDTH: f32 = 135.0;
-
-const OBSTACLE_HEIGHT: f32 = 105.0;
-const OBSTACLE_WIDTH: f32 = 135.0;
 
 #[derive(Component)]
 pub struct Obstacle {
@@ -35,17 +32,11 @@ pub fn spawn_new_obstacles(
     mut commands: Commands,
     obstacles: Query<&Transform, (With<Obstacle>, Without<CameraMarker>)>,
     camera: Query<&Transform, (With<CameraMarker>, Without<Obstacle>)>,
-    asset_server: Res<AssetServer>,
     window: Query<&Window>,
+    level_assets: Query<&LevelAssets>,
 ) {
     let width = window.single().width();
     let window_scale = 1080.0 / window.single().height();
-    let y_values = [
-        (OBSTACLE_HEIGHT / 2.0 + 20.0) / window_scale,
-        (135.0 + OBSTACLE_HEIGHT / 2.0 + 10.0) / window_scale,
-        (2.0 * 135.0 + OBSTACLE_HEIGHT / 2.0 + 15.0) / window_scale,
-        (3.0 * 135.0 + OBSTACLE_HEIGHT / 2.0 - 10.0) / window_scale,
-    ];
 
     if obstacles.iter().count() > 10 {
         return;
@@ -54,14 +45,14 @@ pub fn spawn_new_obstacles(
     let offset = camera.single().translation.x + width;
 
     let mut rng = thread_rng();
-    let x_pos = rand::random::<f32>() * width + OBSTACLE_WIDTH / 2.0 + offset;
+    let x_pos = rand::random::<f32>() * width + level_assets.single().obstacle_width / 2.0 + offset;
     let parity = (-1.0_f32).powi(rng.gen_range(0..10));
-    let y_pos = parity * y_values[rng.gen_range(0..4)];
-    let speed = parity * 100.0;
+    let y_pos = parity * level_assets.single().y_values[rng.gen_range(0..4)] / window_scale;
+    let speed = parity * level_assets.single().obstacle_speed;
 
     if obstacles.iter().any(|o| {
-        (o.translation.x - x_pos).abs() < OBSTACLE_WIDTH
-            && (o.translation.y - y_pos).abs() < OBSTACLE_HEIGHT
+        (o.translation.x - x_pos).abs() < level_assets.single().obstacle_width
+            && (o.translation.y - y_pos).abs() < level_assets.single().obstacle_height
     }) {
         return;
     }
@@ -71,14 +62,14 @@ pub fn spawn_new_obstacles(
         SpriteBundle {
             sprite: Sprite {
                 custom_size: Some(Vec2 {
-                    x: OBSTACLE_WIDTH / window_scale,
-                    y: OBSTACLE_HEIGHT / window_scale,
+                    x: level_assets.single().obstacle_width / window_scale,
+                    y: level_assets.single().obstacle_height / window_scale,
                 }),
                 ..default()
             },
             texture: match parity.round() {
-                -1.0 => asset_server.load("1082.png"),
-                _ => asset_server.load("1081.png"),
+                -1.0 => level_assets.single().obstacle_texture[1].clone(),
+                _ => level_assets.single().obstacle_texture[0].clone(),
             },
             transform: Transform::from_xyz(x_pos, y_pos, 1.0),
             ..default()
@@ -92,15 +83,16 @@ pub fn detect_collision(
     obstacles: Query<(Entity, &Transform), (With<Obstacle>, Without<Car>)>,
     asset_server: Res<AssetServer>,
     window: Query<&Window>,
+    level_assets: Query<&LevelAssets>,
 ) {
     let window_scale = 1080.0 / window.single().height();
     let car_pos = car.single().1.translation;
 
     for obstacle in obstacles.iter() {
         if (obstacle.1.translation.x - car_pos.x).abs()
-            <= 0.95 * ((CARWIDTH + OBSTACLE_WIDTH) / window_scale) / 2.0
+            <= 0.95 * ((CARWIDTH + level_assets.single().obstacle_width) / window_scale) / 2.0
             && (obstacle.1.translation.y - car_pos.y).abs()
-                <= 0.90 * ((CARHEIGHT + OBSTACLE_HEIGHT) / window_scale) / 2.0
+                <= 0.90 * ((CARHEIGHT + level_assets.single().obstacle_height) / window_scale) / 2.0
         {
             car.single_mut().0.state = CarState::Crashed;
             commands.entity(obstacle.0).despawn();
@@ -108,6 +100,7 @@ pub fn detect_collision(
                 source: asset_server.load("crash.wav"),
                 settings: PlaybackSettings::DESPAWN,
             });
+            car.single_mut().0.collision_counter += 1;
         }
     }
 }

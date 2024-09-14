@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum MenuState {
+pub enum GameState {
+    LoadNextLevel,
     Running,
     Paused,
 }
@@ -33,14 +34,14 @@ pub fn spawn_menu(mut commands: Commands) {
 
 pub fn update_menu(
     mut commands: Commands,
-    state: Res<State<MenuState>>,
+    state: Res<State<GameState>>,
+    mut next_state: ResMut<NextState<GameState>>,
     button_input: Res<ButtonInput<KeyCode>>,
-    mut next_state: ResMut<NextState<MenuState>>,
     menu_text: Query<Entity, With<MenuText>>,
 ) {
     if button_input.just_pressed(KeyCode::Escape) {
         match state.get() {
-            MenuState::Running => {
+            GameState::Running => {
                 commands.spawn((
                     TextBundle::from_section(
                         "PAUSED",
@@ -60,14 +61,15 @@ pub fn update_menu(
                     }),
                     MenuText,
                 ));
-                next_state.set(MenuState::Paused);
+                next_state.set(GameState::Paused);
             }
-            MenuState::Paused => {
+            GameState::Paused => {
                 menu_text.iter().for_each(|text| {
                     commands.entity(text).despawn();
                 });
-                next_state.set(MenuState::Running);
+                next_state.set(GameState::Running);
             }
+            _ => {}
         }
     }
 }

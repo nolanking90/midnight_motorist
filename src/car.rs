@@ -1,12 +1,13 @@
+use std::f32::consts::PI;
 use std::time::Duration;
 
 use bevy::prelude::*;
 use bevy::time::Timer;
-use crate::CameraMarker;
+use crate::{LevelAssets, CameraMarker};
 
 const CARHEIGHT: f32 = 105.0;
 const CARWIDTH: f32 = 135.0;
-const YSPEED: f32 = 900.0;
+const YSPEED: f32 = 500.0;
 
 #[derive(Component)]
 pub struct Car {
@@ -14,9 +15,9 @@ pub struct Car {
     pub state: CarState,
     pub score: f32,
     sprite_index: usize,
-    texture_list: Vec<Handle<Image>>,
     frame_timer: Timer,
     pub position: Vec3,
+    pub collision_counter: u8,
 }
 
 #[derive(PartialEq)]
@@ -29,6 +30,7 @@ pub fn spawn_car(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     window: Query<&Window>,
+    level_assets: Query<&LevelAssets>,
 ) {
     let window_scale = 1080.0 / window.single().height();
     let mut texture_list: Vec<Handle<Image>> = Vec::new();
@@ -45,7 +47,7 @@ pub fn spawn_car(
                 }),
                 ..default()
             },
-            texture: texture_list[0].clone(),
+            texture: level_assets.single().car_texture.clone(),
             transform: Transform::from_xyz(0.0, 0.0, 1.0),
             ..default()
         },
@@ -55,12 +57,12 @@ pub fn spawn_car(
             state: CarState::Moving,
             frame_timer: Timer::new(Duration::from_secs_f32(1.0), TimerMode::Repeating),
             sprite_index: 0,
-            texture_list,
             position: Vec3 {
                 x: 0.0,
                 y: 0.0,
                 z: 1.0,
             },
+            collision_counter: 0,
         },
     ));
 }
@@ -68,7 +70,7 @@ pub fn spawn_car(
 pub fn update_car(
     button_input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
-    mut cars: Query<(&mut Car, &mut Transform, &mut Handle<Image>), Without<CameraMarker>>,
+    mut cars: Query<(&mut Car, &mut Transform), Without<CameraMarker>>,
     camera: Query<&Transform, With<CameraMarker>>,
     window: Query<&Window>,
 ) {
@@ -76,7 +78,7 @@ pub fn update_car(
     let height = window.single().height();
     let window_scale = 1080.0 / height;
 
-    for (mut car, mut transform, mut sprite) in cars.iter_mut() {
+    for (mut car, mut transform) in cars.iter_mut() {
         match car.state {
             CarState::Moving => {
                 if button_input.pressed(KeyCode::KeyW) || button_input.pressed(KeyCode::ArrowUp) {
@@ -128,17 +130,12 @@ pub fn update_car(
                 }
                 car.frame_timer.tick(time.delta());
 
-                if car.sprite_index == 19 {
-                    car.sprite_index = 0;
-                } else {
-                    car.sprite_index += 1;
-                    *sprite = car.texture_list[car.sprite_index].clone();
-                }
+                transform.rotation = transform.rotation.mul_quat(Quat::from_axis_angle(Vec3{x: 0.0, y: 0.0, z: 1.0}, 2.0 * PI / 20.0));
 
                 if car.frame_timer.just_finished() {
                     car.sprite_index = 0;
                     car.state = CarState::Moving;
-                    *sprite = car.texture_list[0].clone();
+                    transform.rotation = Quat::from_axis_angle(Vec3{x: 0.0, y: 0.0, z: 0.0}, 0.0);
                 }
             }
         }

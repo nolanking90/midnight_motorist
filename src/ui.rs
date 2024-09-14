@@ -1,6 +1,6 @@
 use bevy::{prelude::*, time::Time};
 
-use crate::Car ;
+use crate::{Car, LevelAssets} ;
 
 #[derive(Component)]
 pub struct CameraMarker;
@@ -18,8 +18,8 @@ pub struct Background;
 
 pub fn spawn_background(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     window: Query<&Window>,
+    level_assets: Query<&LevelAssets>,
 ) {
     let width = window.single().width();
     let height = window.single().height();
@@ -27,7 +27,7 @@ pub fn spawn_background(
     commands.spawn((Camera2dBundle::default(), CameraMarker));
     commands.spawn((
         SpriteBundle {
-            texture: asset_server.load("1058.png"), // Background
+            texture: level_assets.single().background_texture.clone(), 
             sprite: Sprite {
                 custom_size: Some(Vec2 {
                     x: width * 3.0,
@@ -48,7 +48,7 @@ pub fn spawn_background(
     ));
     commands.spawn((
         SpriteBundle {
-            texture: asset_server.load("1058.png"), // Background
+            texture: level_assets.single().background_texture.clone(),
             sprite: Sprite {
                 custom_size: Some(Vec2 {
                     x: width,
@@ -71,10 +71,10 @@ pub fn spawn_background(
 
 pub fn update_background(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     camera: Query<&Transform, (With<CameraMarker>, Without<Background>)>,
     backgrounds: Query<(Entity, &Transform), (With<Background>, Without<CameraMarker>)>,
     window: Query<&Window>,
+    level_assets: Query<&LevelAssets>,
 ) {
     let width = window.single().width();
     let height = window.single().height();
@@ -92,7 +92,7 @@ pub fn update_background(
 
         commands.spawn((
             SpriteBundle {
-                texture: asset_server.load("1058.png"), // Background
+                texture: level_assets.single().background_texture.clone(), // Background
                 sprite: Sprite {
                     custom_size: Some(Vec2 {
                         x: width * 3.0,
