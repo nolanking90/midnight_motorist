@@ -39,7 +39,7 @@ fn main() {
         //.add_plugins(WorldInspectorPlugin::new())
         .add_systems(Startup, spawn_ui)
         .add_systems(Startup, spawn_score)
-        .add_systems(Startup, spawn_menu)
+        //.add_systems(Startup, spawn_menu)
         .add_systems(Update, update_menu)
         .add_systems(Update, update_score.run_if(in_state(GameState::Running)))
         .add_systems(Update, camera_tracking.run_if(in_state(GameState::Running)))
@@ -55,7 +55,7 @@ fn main() {
         .add_systems(Update, load_level.run_if(in_state(GameState::LoadNextLevel)))
 
         .add_systems(Update, update_background.run_if(in_state(GameState::Running)))
-        .add_systems(FixedUpdate, update_car.run_if(in_state(GameState::Running)))
+        .add_systems(Update, update_car.run_if(in_state(GameState::Running)))
         .add_systems(Update, update_obstacles.run_if(in_state(GameState::Running)))
         .add_systems(Update, spawn_new_obstacles.after(update_obstacles))
         .add_systems(Update, detect_collision.run_if(in_state(GameState::Running)))

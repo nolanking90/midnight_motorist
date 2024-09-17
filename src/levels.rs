@@ -1,5 +1,4 @@
-use crate::car::*;
-use crate::menu::*;
+use crate::{car::*, menu::*, Background, Obstacle};
 use crate::CameraMarker;
 use bevy::prelude::*;
 
@@ -94,11 +93,12 @@ pub fn next_level(
 pub fn load_level(
     mut commands: Commands,
     level: Res<Level>,
-    level_assets: Query<Entity, With<LevelAssets>>,
+    assets: Query<(Entity, AnyOf<(&LevelAssets, &Background, &Obstacle)>)>,
     mut next_state: ResMut<NextState<GameState>>,
     asset_server: Res<AssetServer>,
+
 ) {
-    level_assets.iter().for_each(|lvl| { commands.entity(lvl).despawn(); });
+    assets.iter().for_each(|a| { commands.entity(a.0).despawn(); });
     match level.level {
         1 => {
             commands.spawn(LevelAssets {
@@ -119,7 +119,25 @@ pub fn load_level(
                 background_texture: asset_server.load("1058.png"),
             });
         }
-        2 => {}
+        2 => {
+            commands.spawn(LevelAssets {
+                obstacle_height: 291.0,
+                obstacle_width: 202.0,
+                obstacle_speed: 0.0,
+                obstacle_texture: vec![
+                    asset_server.load("1149.png"),
+                    asset_server.load("1149.png"),
+                ],
+                y_values: [
+                    (105.0 / 2.0 + 20.0),
+                    (135.0 + 105.0 / 2.0 + 10.0),
+                    (2.0 * 135.0 + 105.0 / 2.0 + 15.0),
+                    (3.0 * 135.0 + 105.0 / 2.0 - 10.0),
+                ],
+                car_texture: asset_server.load("1145.png"),
+                background_texture: asset_server.load("backroads.png"),
+            });
+        }
         3 => {}
         _ => {}
     }

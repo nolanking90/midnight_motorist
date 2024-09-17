@@ -28,15 +28,10 @@ pub enum CarState {
 
 pub fn spawn_car(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     window: Query<&Window>,
     level_assets: Query<&LevelAssets>,
 ) {
     let window_scale = 1080.0 / window.single().height();
-    let mut texture_list: Vec<Handle<Image>> = Vec::new();
-    for n in 0..20 {
-        texture_list.push(asset_server.load((1084 + n).to_string() + ".png"));
-    }
 
     commands.spawn((
         SpriteBundle {
