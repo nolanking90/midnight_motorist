@@ -1,9 +1,9 @@
 use std::f32::consts::PI;
 use std::time::Duration;
 
+use crate::{CameraMarker, LevelAssets};
 use bevy::prelude::*;
 use bevy::time::Timer;
-use crate::{LevelAssets, CameraMarker};
 
 const CARHEIGHT: f32 = 105.0;
 const CARWIDTH: f32 = 135.0;
@@ -29,8 +29,13 @@ pub enum CarState {
 pub fn spawn_car(
     mut commands: Commands,
     window: Query<&Window>,
-    level_assets: Query<&LevelAssets>,
+    level_assets: ResMut<LevelAssets>,
+    car: Query<&Car>,
 ) {
+    if !car.is_empty() {
+        return;
+    }
+
     let window_scale = 1080.0 / window.single().height();
 
     commands.spawn((
@@ -42,7 +47,7 @@ pub fn spawn_car(
                 }),
                 ..default()
             },
-            texture: level_assets.single().car_texture.clone(),
+            texture: level_assets.car_texture.clone(),
             transform: Transform::from_xyz(0.0, 0.0, 1.0),
             ..default()
         },
@@ -125,12 +130,26 @@ pub fn update_car(
                 }
                 car.frame_timer.tick(time.delta());
 
-                transform.rotation = transform.rotation.mul_quat(Quat::from_axis_angle(Vec3{x: 0.0, y: 0.0, z: 1.0}, 2.0 * PI / 20.0));
+                transform.rotation = transform.rotation.mul_quat(Quat::from_axis_angle(
+                    Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 1.0,
+                    },
+                    2.0 * PI / 20.0,
+                ));
 
                 if car.frame_timer.just_finished() {
                     car.sprite_index = 0;
                     car.state = CarState::Moving;
-                    transform.rotation = Quat::from_axis_angle(Vec3{x: 0.0, y: 0.0, z: 0.0}, 0.0);
+                    transform.rotation = Quat::from_axis_angle(
+                        Vec3 {
+                            x: 0.0,
+                            y: 0.0,
+                            z: 0.0,
+                        },
+                        0.0,
+                    );
                 }
             }
         }

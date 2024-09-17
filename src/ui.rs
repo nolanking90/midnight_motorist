@@ -5,11 +5,18 @@ use crate::{Car, LevelAssets} ;
 #[derive(Component)]
 pub struct CameraMarker;
 
+pub fn spawn_camera(mut commands: Commands) {
+    commands.spawn((Camera2dBundle::default(), CameraMarker));
+}
+
 pub fn camera_tracking(
     time: Res<Time>,
     mut camera: Query<&mut Transform, With<CameraMarker>>,
     player: Query<&Car>,
 ) {
+    if camera.is_empty() || player.is_empty() {
+        return
+    }
     camera.single_mut().translation.x += player.single().speed.x * time.delta_seconds();
 }
 
@@ -19,15 +26,14 @@ pub struct Background;
 pub fn spawn_background(
     mut commands: Commands,
     window: Query<&Window>,
-    level_assets: Query<&LevelAssets>,
+    level_assets: ResMut<LevelAssets>,
 ) {
     let width = window.single().width();
     let height = window.single().height();
 
-    commands.spawn((Camera2dBundle::default(), CameraMarker));
     commands.spawn((
         SpriteBundle {
-            texture: level_assets.single().background_texture.clone(), 
+            texture: level_assets.background_texture.clone(), 
             sprite: Sprite {
                 custom_size: Some(Vec2 {
                     x: width * 3.0,
@@ -48,7 +54,7 @@ pub fn spawn_background(
     ));
     commands.spawn((
         SpriteBundle {
-            texture: level_assets.single().background_texture.clone(),
+            texture: level_assets.background_texture.clone(),
             sprite: Sprite {
                 custom_size: Some(Vec2 {
                     x: width,
@@ -74,7 +80,7 @@ pub fn update_background(
     camera: Query<&Transform, (With<CameraMarker>, Without<Background>)>,
     backgrounds: Query<(Entity, &Transform), (With<Background>, Without<CameraMarker>)>,
     window: Query<&Window>,
-    level_assets: Query<&LevelAssets>,
+    level_assets: Res<LevelAssets>,
 ) {
     let width = window.single().width();
     let height = window.single().height();
@@ -92,7 +98,7 @@ pub fn update_background(
 
         commands.spawn((
             SpriteBundle {
-                texture: level_assets.single().background_texture.clone(), // Background
+                texture: level_assets.background_texture.clone(), // Background
                 sprite: Sprite {
                     custom_size: Some(Vec2 {
                         x: width * 3.0,
@@ -194,6 +200,10 @@ pub fn update_score(
     prev_score_digits: Query<Entity, With<ScoreDigit>>,
     window: Query<&Window>,
 ) {
+    if cars.is_empty() {
+        return
+    }
+
     for prev_digit in prev_score_digits.iter() {
         commands.entity(prev_digit).despawn();
     }
@@ -286,7 +296,11 @@ pub fn update_speed(
         commands.entity(prev_digit).despawn();
     }
 
-    let player_speed = (cars.single().speed.x / 10.0).floor() as u32;
+    let mut player_speed = 0;
+    if !cars.is_empty() {
+        player_speed = (cars.single().speed.x / 10.0).floor() as u32;
+    }
+
     let speed_string = player_speed.to_string();
     let temp = speed_string.chars();
     let mut left_pos = 20.0 + 0.06 * width;

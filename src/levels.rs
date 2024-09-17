@@ -17,7 +17,7 @@ pub struct Level {
 //assert_eq!(resource.value, 0);
 //}
 
-#[derive(Component)]
+#[derive(Resource, Default)]
 pub struct LevelAssets {
     pub car_texture: Handle<Image>,
     pub obstacle_texture: Vec<Handle<Image>>,
@@ -33,6 +33,9 @@ pub fn game_over(
     car: Query<&Car>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
+    if car.is_empty() { 
+        return 
+    }
     if car.single().collision_counter == 5 {
         commands.spawn((
             TextBundle::from_section(
@@ -62,6 +65,7 @@ pub fn next_level(
     window: Query<&Window>,
     camera: Query<&Transform, With<CameraMarker>>,
     mut next_state: ResMut<NextState<GameState>>,
+    mut level: ResMut<Level>,
 ) {
     let width = window.single().width();
     let laps = (camera.single().translation.x / (width) / 10.0) as u8;
@@ -86,22 +90,34 @@ pub fn next_level(
             }),
             MenuText,
         ));
+        level.level += 1;
+        println!("Level: {}", level.level);
         next_state.set(GameState::LoadNextLevel);
     }
 }
 
-pub fn load_level(
+pub fn despawn_level(
     mut commands: Commands,
+    old_obstacles: Query<Entity, (With<Obstacle>, Without<Background>, Without<Car>)>,
+    old_backgrounds: Query<Entity, (With<Background>, Without<Obstacle>, Without<Car>)>,
+    old_car: Query<Entity, (With<Car>, Without<Obstacle>, Without<Background>)>,
+) {
+    old_obstacles.iter().for_each( |entity| { commands.entity(entity).despawn() });
+    old_car.iter().for_each( |entity| { commands.entity(entity).despawn() });
+    old_backgrounds.iter().for_each( |entity| { commands.entity(entity).despawn() });
+}
+
+pub fn load_level(
     level: Res<Level>,
-    assets: Query<(Entity, AnyOf<(&LevelAssets, &Background, &Obstacle)>)>,
+    mut assets: ResMut<LevelAssets>,
     mut next_state: ResMut<NextState<GameState>>,
     asset_server: Res<AssetServer>,
-
+    mut camera: Query<&mut Transform, With<CameraMarker>>
 ) {
-    assets.iter().for_each(|a| { commands.entity(a.0).despawn(); });
+    camera.single_mut().translation = Vec3 {x: 0.0, y: 0.0, z: 0.0 };
     match level.level {
         1 => {
-            commands.spawn(LevelAssets {
+           *assets = LevelAssets {
                 obstacle_height: 105.0,
                 obstacle_width: 135.0,
                 obstacle_speed: 100.0,
@@ -117,10 +133,10 @@ pub fn load_level(
                 ],
                 car_texture: asset_server.load("1084.png"),
                 background_texture: asset_server.load("1058.png"),
-            });
+            };
         }
         2 => {
-            commands.spawn(LevelAssets {
+            *assets = LevelAssets {
                 obstacle_height: 291.0,
                 obstacle_width: 202.0,
                 obstacle_speed: 0.0,
@@ -136,7 +152,7 @@ pub fn load_level(
                 ],
                 car_texture: asset_server.load("1145.png"),
                 background_texture: asset_server.load("backroads.png"),
-            });
+            };
         }
         3 => {}
         _ => {}
