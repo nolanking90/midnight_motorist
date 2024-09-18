@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 use std::time::Duration;
 
-use crate::{CameraMarker, LevelAssets};
+use crate::{CameraMarker, LevelAssets, Score};
 use bevy::prelude::*;
 use bevy::time::Timer;
 
@@ -31,6 +31,7 @@ pub fn spawn_car(
     window: Query<&Window>,
     level_assets: ResMut<LevelAssets>,
     car: Query<&Car>,
+    score: Res<Score>
 ) {
     if !car.is_empty() {
         return;
@@ -53,7 +54,7 @@ pub fn spawn_car(
         },
         Car {
             speed: Vec2 { x: 0.0, y: YSPEED },
-            score: 0.0,
+            score: score.score,
             state: CarState::Moving,
             frame_timer: Timer::new(Duration::from_secs_f32(1.0), TimerMode::Repeating),
             sprite_index: 0,

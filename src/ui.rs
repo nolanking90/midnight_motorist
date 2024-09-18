@@ -160,9 +160,10 @@ pub fn spawn_ui(
     });
 }
 
-#[derive(Component)]
+#[derive(Resource)]
 pub struct Score {
     digits: Vec<Handle<Image>>,
+    pub score: f32
 }
 
 #[derive(Component)]
@@ -190,13 +191,13 @@ pub fn spawn_score(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         ..Default::default()
     });
-    commands.spawn(Score { digits });
+    commands.insert_resource(Score { digits , score: 0.0});
 }
 
 pub fn update_score(
     mut commands: Commands,
     cars: Query<&Car>,
-    score: Query<&Score>,
+    score: Res<Score>,
     prev_score_digits: Query<Entity, With<ScoreDigit>>,
     window: Query<&Window>,
 ) {
@@ -229,7 +230,7 @@ pub fn update_score(
                     ..Default::default()
                 },
                 image: UiImage {
-                    texture: score.single().digits[digit as usize].clone(),
+                    texture: score.digits[digit as usize].clone(),
                     ..default()
                 },
                 ..Default::default()
@@ -246,7 +247,7 @@ pub struct LapsDigit;
 pub fn update_laps(
     mut commands: Commands,
     camera: Query<&Transform, With<CameraMarker>>,
-    score: Query<&Score>,
+    score: Res<Score>,
     window: Query<&Window>,
     prev_laps_digit: Query<Entity, With<LapsDigit>>,
 ) {
@@ -269,7 +270,7 @@ pub fn update_laps(
                 ..Default::default()
             },
             image: UiImage {
-                texture: score.single().digits[digit as usize].clone(),
+                texture: score.digits[digit as usize].clone(),
                 ..default()
             },
             ..Default::default()
@@ -285,7 +286,7 @@ pub struct SpeedDigit;
 pub fn update_speed(
     mut commands: Commands,
     cars: Query<&Car>,
-    score: Query<&Score>,
+    score: Res<Score>,
     prev_speed_digits: Query<Entity, With<SpeedDigit>>,
     window: Query<&Window>,
 ) {
@@ -319,7 +320,7 @@ pub fn update_speed(
                     ..Default::default()
                 },
                 image: UiImage {
-                    texture: score.single().digits[digit as usize].clone(),
+                    texture: score.digits[digit as usize].clone(),
                     ..default()
                 },
                 ..Default::default()

@@ -1,3 +1,4 @@
+use crate::Score;
 use crate::CameraMarker;
 use crate::{car::*, menu::*, Background, Obstacle};
 use bevy::prelude::*;
@@ -117,9 +118,9 @@ pub fn despawn_level(
         ),
     >,
     old_car: Query<
-        Entity,
+        (Entity,
+        &Car),
         (
-            With<Car>,
             Without<Obstacle>,
             Without<Background>,
             Without<MenuText>,
@@ -134,6 +135,7 @@ pub fn despawn_level(
             Without<Car>,
         ),
     >,
+    mut score: ResMut<Score>,
 ) {
     if !old_obstacles.is_empty() {
         old_obstacles
@@ -141,9 +143,10 @@ pub fn despawn_level(
             .for_each(|entity| commands.entity(entity).despawn());
     }
     if !old_car.is_empty() {
+        score.score = old_car.single().1.score;
         old_car
             .iter()
-            .for_each(|entity| commands.entity(entity).despawn());
+            .for_each(|entity| commands.entity(entity.0).despawn());
     }
     if !old_backgrounds.is_empty() {
         old_backgrounds

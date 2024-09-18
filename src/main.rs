@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-//use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 
 mod ui;
@@ -36,7 +36,7 @@ fn main() {
         }))
         .add_plugins(ScreenDiagnosticsPlugin::default())
         .add_plugins(ScreenFrameDiagnosticsPlugin)
-        //.add_plugins(WorldInspectorPlugin::new())
+        .add_plugins(WorldInspectorPlugin::new())
         .add_systems(Startup, spawn_ui)
         .add_systems(Startup, spawn_score)
         .add_systems(Startup, spawn_camera)
@@ -58,7 +58,7 @@ fn main() {
         .add_systems(Update, despawn_level.run_if(in_state(GameState::LoadNextLevel)))
         .add_systems(Update, spawn_loading_screen.run_if(in_state(GameState::LoadNextLevel)).after(despawn_level))
         .add_systems(Update, load_level.run_if(in_state(GameState::LoadNextLevel)).after(despawn_level))
-        .add_systems(Update, (spawn_car, spawn_background).after(load_level).run_if(in_state(GameState::Loading)))
+        .add_systems(Update, (spawn_car, spawn_background, start_music).after(load_level).run_if(in_state(GameState::Loading)))
         .add_systems(Update, despawn_loading_screen.run_if(in_state(GameState::Loading)))
 
         .add_systems(Update, update_background.run_if(in_state(GameState::Running)))
