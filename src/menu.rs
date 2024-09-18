@@ -5,6 +5,7 @@ pub enum GameState {
     LoadNextLevel,
     Running,
     Paused,
+    Loading,
 }
 
 #[derive(Component)]

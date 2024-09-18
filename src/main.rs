@@ -51,17 +51,20 @@ fn main() {
         .insert_resource(LevelAssets { ..default() })
         .insert_state(GameState::LoadNextLevel)
         .add_systems(Startup, load_level.after(spawn_camera))
-        .add_systems(Startup, (spawn_background, spawn_car, start_music).after(load_level))
         .add_systems(Update, game_over.run_if(in_state(GameState::Running)))
         .add_systems(Update, next_level.run_if(in_state(GameState::Running)))
+        //.add_systems(Startup, (spawn_background, spawn_car, start_music).run_if(in_state(GameState::Running)))
+
         .add_systems(Update, despawn_level.run_if(in_state(GameState::LoadNextLevel)))
+        .add_systems(Update, spawn_loading_screen.run_if(in_state(GameState::LoadNextLevel)).after(despawn_level))
         .add_systems(Update, load_level.run_if(in_state(GameState::LoadNextLevel)).after(despawn_level))
-        .add_systems(PostUpdate, (spawn_car, spawn_background).after(load_level))
+        .add_systems(Update, (spawn_car, spawn_background).after(load_level).run_if(in_state(GameState::Loading)))
+        .add_systems(Update, despawn_loading_screen.run_if(in_state(GameState::Loading)))
 
         .add_systems(Update, update_background.run_if(in_state(GameState::Running)))
         .add_systems(Update, update_car.run_if(in_state(GameState::Running)))
         .add_systems(Update, update_obstacles.run_if(in_state(GameState::Running)))
         .add_systems(Update, spawn_new_obstacles.after(update_obstacles))
-        .add_systems(Update, detect_collision.run_if(in_state(GameState::Running)))
+        //.add_systems(Update, detect_collision.run_if(in_state(GameState::Running)))
         .run();
 }
