@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use rand::prelude::*;
 
-use crate::{CameraMarker, Car, CarState, LevelAssets};
+use crate::{CameraMarker, Car, CarState, LevelAssets, LevelAssetMarker}; 
 
 const CARHEIGHT: f32 = 105.0;
 const CARWIDTH: f32 = 135.0;
@@ -74,6 +74,7 @@ pub fn spawn_new_obstacles(
             transform: Transform::from_xyz(x_pos, y_pos, 1.0),
             ..default()
         },
+        LevelAssetMarker
     ));
 }
 

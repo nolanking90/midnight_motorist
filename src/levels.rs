@@ -1,6 +1,5 @@
-use crate::Score;
 use crate::CameraMarker;
-use crate::{car::*, menu::*, Background, Obstacle};
+use crate::{car::*, menu::*};
 use bevy::prelude::*;
 
 #[derive(Resource)]
@@ -8,15 +7,8 @@ pub struct Level {
     pub level: u8,
 }
 
-//fn read_resource_system(resource: Res<MyResource>) {
-//assert_eq!(resource.value, 42);
-//}
-
-//fn write_resource_system(mut resource: ResMut<MyResource>) {
-//assert_eq!(resource.value, 42);
-//resource.value = 0;
-//assert_eq!(resource.value, 0);
-//}
+#[derive(Component)]
+pub struct LevelAssetMarker;
 
 #[derive(Resource, Default)]
 pub struct LevelAssets {
@@ -93,63 +85,24 @@ pub fn next_level(
         ));
         level.level += 1;
         println!("Level: {}", level.level);
-        next_state.set(GameState::LoadNextLevel);
+        next_state.set(GameState::Unloading);
     }
 }
 
 pub fn despawn_level(
     mut commands: Commands,
-    old_obstacles: Query<
-        Entity,
-        (
-            With<Obstacle>,
-            Without<Background>,
-            Without<Car>,
-            Without<MenuText>,
-        ),
-    >,
-    old_backgrounds: Query<
-        Entity,
-        (
-            With<Background>,
-            Without<Obstacle>,
-            Without<Car>,
-            Without<MenuText>,
-        ),
-    >,
-    old_car: Query<
-        (Entity,
-        &Car),
-        (
-            Without<Obstacle>,
-            Without<Background>,
-            Without<MenuText>,
-        ),
-    >,
+    old_assets: Query<Entity, (With<LevelAssetMarker>, Without<MenuText>)>,
     menutext: Query<
         Entity,
         (
             With<MenuText>,
-            Without<Obstacle>,
-            Without<Background>,
-            Without<Car>,
+            Without<LevelAssetMarker>,
         ),
     >,
-    mut score: ResMut<Score>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
-    if !old_obstacles.is_empty() {
-        old_obstacles
-            .iter()
-            .for_each(|entity| commands.entity(entity).despawn());
-    }
-    if !old_car.is_empty() {
-        score.score = old_car.single().1.score;
-        old_car
-            .iter()
-            .for_each(|entity| commands.entity(entity.0).despawn());
-    }
-    if !old_backgrounds.is_empty() {
-        old_backgrounds
+    if !old_assets.is_empty() {
+        old_assets
             .iter()
             .for_each(|entity| commands.entity(entity).despawn());
     }
@@ -157,6 +110,9 @@ pub fn despawn_level(
     if !menutext.is_empty() {
         commands.entity(menutext.single()).despawn();
     }
+
+    next_state.set(GameState::LoadNextLevel);
+
 }
 
 pub fn load_level(

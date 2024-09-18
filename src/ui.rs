@@ -1,6 +1,6 @@
 use bevy::{prelude::*, time::Time};
 
-use crate::{Car, LevelAssets} ;
+use crate::{Car, LevelAssets, LevelAssetMarker};
 
 #[derive(Component)]
 pub struct CameraMarker;
@@ -15,7 +15,7 @@ pub fn camera_tracking(
     player: Query<&Car>,
 ) {
     if camera.is_empty() || player.is_empty() {
-        return
+        return;
     }
     camera.single_mut().translation.x += player.single().speed.x * time.delta_seconds();
 }
@@ -27,13 +27,14 @@ pub fn spawn_background(
     mut commands: Commands,
     window: Query<&Window>,
     level_assets: ResMut<LevelAssets>,
+    asset_server: ResMut<AssetServer>,
 ) {
     let width = window.single().width();
     let height = window.single().height();
 
     commands.spawn((
         SpriteBundle {
-            texture: level_assets.background_texture.clone(), 
+            texture: level_assets.background_texture.clone(),
             sprite: Sprite {
                 custom_size: Some(Vec2 {
                     x: width * 3.0,
@@ -51,6 +52,7 @@ pub fn spawn_background(
             stretch_value: height / 1080.0,
         },
         Background,
+        LevelAssetMarker
     ));
     commands.spawn((
         SpriteBundle {
@@ -72,6 +74,24 @@ pub fn spawn_background(
             stretch_value: height / 1080.0,
         },
         Background,
+        LevelAssetMarker
+    ));
+    commands.spawn((
+        SpriteBundle {
+            texture: asset_server.load("1077.png"),
+            sprite: Sprite {
+                custom_size: Some(Vec2 { x: 64.0, y: height }),
+                anchor: bevy::sprite::Anchor::CenterLeft,
+                ..default()
+            },
+            transform: Transform::from_xyz(width * 10.0, 0.0, 2.0),
+            ..default()
+        },
+        ImageScaleMode::Tiled {
+            tile_x: true,
+            tile_y: true,
+            stretch_value: 1.0,
+        },
     ));
 }
 
@@ -116,15 +136,12 @@ pub fn update_background(
                 stretch_value: height / 1080.0,
             },
             Background,
+            LevelAssetMarker
         ));
     }
 }
 
-pub fn spawn_ui(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-) {
-
+pub fn spawn_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(ImageBundle {
         style: Style {
             position_type: PositionType::Absolute,
@@ -163,7 +180,7 @@ pub fn spawn_ui(
 #[derive(Resource)]
 pub struct Score {
     digits: Vec<Handle<Image>>,
-    pub score: f32
+    pub score: f32,
 }
 
 #[derive(Component)]
@@ -191,7 +208,7 @@ pub fn spawn_score(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         ..Default::default()
     });
-    commands.insert_resource(Score { digits , score: 0.0});
+    commands.insert_resource(Score { digits, score: 0.0 });
 }
 
 pub fn update_score(
@@ -202,7 +219,7 @@ pub fn update_score(
     window: Query<&Window>,
 ) {
     if cars.is_empty() {
-        return
+        return;
     }
 
     for prev_digit in prev_score_digits.iter() {
@@ -210,7 +227,7 @@ pub fn update_score(
     }
 
     let width = window.single().width();
-    let player_score = cars.single().score.floor() as u32;
+    let player_score = score.score.floor() as u32;
     let score_string = player_score.to_string();
     let temp = score_string.chars();
     let num_digits = temp.clone().count();
@@ -275,10 +292,9 @@ pub fn update_laps(
             },
             ..Default::default()
         },
-        LapsDigit
+        LapsDigit,
     ));
 }
-
 
 #[derive(Component)]
 pub struct SpeedDigit;
@@ -290,7 +306,6 @@ pub fn update_speed(
     prev_speed_digits: Query<Entity, With<SpeedDigit>>,
     window: Query<&Window>,
 ) {
-
     let width = window.single().width();
 
     for prev_digit in prev_speed_digits.iter() {
@@ -331,9 +346,16 @@ pub fn update_speed(
     }
 }
 
+#[derive(Component)]
+pub struct MusicMarker;
+
 pub fn start_music(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(AudioBundle {
-        source: asset_server.load("music.mp3"),
-        settings: PlaybackSettings::LOOP,
-    });
+    commands.spawn((
+        AudioBundle {
+            source: asset_server.load("music.mp3"),
+            settings: PlaybackSettings::LOOP,
+        },
+        MusicMarker,
+        LevelAssetMarker
+    ));
 }

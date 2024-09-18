@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 use std::time::Duration;
 
-use crate::{CameraMarker, LevelAssets, Score};
+use crate::{CameraMarker, LevelAssets, Score, LevelAssetMarker};
 use bevy::prelude::*;
 use bevy::time::Timer;
 
@@ -13,7 +13,6 @@ const YSPEED: f32 = 500.0;
 pub struct Car {
     pub speed: Vec2,
     pub state: CarState,
-    pub score: f32,
     sprite_index: usize,
     frame_timer: Timer,
     pub position: Vec3,
@@ -31,7 +30,6 @@ pub fn spawn_car(
     window: Query<&Window>,
     level_assets: ResMut<LevelAssets>,
     car: Query<&Car>,
-    score: Res<Score>
 ) {
     if !car.is_empty() {
         return;
@@ -54,7 +52,6 @@ pub fn spawn_car(
         },
         Car {
             speed: Vec2 { x: 0.0, y: YSPEED },
-            score: score.score,
             state: CarState::Moving,
             frame_timer: Timer::new(Duration::from_secs_f32(1.0), TimerMode::Repeating),
             sprite_index: 0,
@@ -65,6 +62,7 @@ pub fn spawn_car(
             },
             collision_counter: 0,
         },
+        LevelAssetMarker
     ));
 }
 
@@ -74,6 +72,7 @@ pub fn update_car(
     mut cars: Query<(&mut Car, &mut Transform), Without<CameraMarker>>,
     camera: Query<&Transform, With<CameraMarker>>,
     window: Query<&Window>,
+    mut score: ResMut<Score>,
 ) {
     let width = window.single().width();
     let height = window.single().height();
@@ -118,7 +117,7 @@ pub fn update_car(
                     car.speed.x += 75.0 * time.delta_seconds();
                 }
                 if car.speed.x > 500.0 {
-                    car.score += 10.0 * time.delta_seconds();
+                    score.score += 10.0 * time.delta_seconds();
                 }
             }
             CarState::Crashed => {
