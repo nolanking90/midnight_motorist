@@ -1,8 +1,8 @@
 Midnight Motorist (from FNAF 6) in Rust w/ Bevy Engine.
 
 # TODO
-- [ ] Countdown animation and starting line
-    Needs to function as loading screen while level assets are loaded/unloaded.
+- [ ] Countdown animation and finish line animation
+- [X] Loadscreen
 - [ ] Fix GitHub workflow/CI
 - [X] Respond to window size changes (or disable resize)
 - [ ] Make menu option for 1080p/720p
