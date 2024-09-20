@@ -76,23 +76,25 @@ pub fn spawn_background(
         Background,
         LevelAssetMarker,
     ));
-    commands.spawn((
-        SpriteBundle {
-            texture: asset_server.load("1077.png"),
-            sprite: Sprite {
-                custom_size: Some(Vec2 { x: 64.0, y: height }),
-                anchor: bevy::sprite::Anchor::CenterLeft,
+    for n in 1..5 {
+        commands.spawn((
+            SpriteBundle {
+                texture: asset_server.load("1077.png"),
+                sprite: Sprite {
+                    custom_size: Some(Vec2 { x: 64.0, y: height }),
+                    anchor: bevy::sprite::Anchor::CenterLeft,
+                    ..default()
+                },
+                transform: Transform::from_xyz((n as f32) * width * 10.0, 0.0, 2.0),
                 ..default()
             },
-            transform: Transform::from_xyz(width * 10.0, 0.0, 2.0),
-            ..default()
-        },
-        ImageScaleMode::Tiled {
-            tile_x: true,
-            tile_y: true,
-            stretch_value: 1.0,
-        },
-    ));
+            ImageScaleMode::Tiled {
+                tile_x: true,
+                tile_y: true,
+                stretch_value: 1.0,
+            },
+        ));
+    }
 }
 
 pub fn update_background(
@@ -263,13 +265,13 @@ pub struct LapsDigit;
 
 pub fn update_laps(
     mut commands: Commands,
-    camera: Query<&Transform, With<CameraMarker>>,
+    car: Query<&Transform, With<Car>>,
     score: Res<Score>,
     window: Query<&Window>,
     prev_laps_digit: Query<Entity, With<LapsDigit>>,
 ) {
     let width = window.single().width();
-    let digit = camera.single().translation.x / (width) / 10.0;
+    let digit = car.single().translation.x / (width) / 10.0;
 
     for prev_digit in prev_laps_digit.iter() {
         commands.entity(prev_digit).despawn();
@@ -293,6 +295,7 @@ pub fn update_laps(
             ..Default::default()
         },
         LapsDigit,
+        LevelAssetMarker
     ));
 }
 

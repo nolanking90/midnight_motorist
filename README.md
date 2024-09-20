@@ -2,7 +2,8 @@ Midnight Motorist (from FNAF 6) in Rust w/ Bevy Engine.
 
 # TODO
 - [X] Countdown animation 
-- [ ] Finish line animation
+- [ ] Lap animation
+- [ ] Next Level animation
 - [X] Loadscreen
 - [ ] Fix GitHub workflow/CI
 - [X] Respond to window size changes (or disable resize)

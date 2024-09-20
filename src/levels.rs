@@ -22,6 +22,7 @@ pub struct LevelAssets {
     pub y_values: [f32; 4],
     pub background_texture: Handle<Image>,
     pub music: Handle<AudioSource>,
+    pub lap_texture: Handle<Image>,
 }
 
 pub fn game_over(
@@ -66,7 +67,7 @@ pub fn next_level(
     let width = window.single().width();
     let laps = (car.single().translation.x / (width) / 10.0) as u8;
 
-    if laps == 1 {
+    if laps == 5 {
         commands.spawn((
             TextBundle::from_section(
                 "SUCCESS",
@@ -87,7 +88,6 @@ pub fn next_level(
             MenuText,
         ));
         level.level += 1;
-        println!("Level: {}", level.level);
         next_state.set(GameState::Unloading);
     }
 }
@@ -143,6 +143,7 @@ pub fn load_level(
                 car_texture: asset_server.load("1084.png"),
                 background_texture: asset_server.load("1058.png"),
                 music: asset_server.load("240bps.mp3"),
+                lap_texture: asset_server.load("1077.png"),
             };
         }
         2 => {
@@ -163,6 +164,7 @@ pub fn load_level(
                 car_texture: asset_server.load("1145.png"),
                 background_texture: asset_server.load("backroads.png"),
                 music: asset_server.load("dui.mp3"),
+                lap_texture: asset_server.load("1077.png"),
             };
         }
         3 => {}
