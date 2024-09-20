@@ -7,6 +7,7 @@ pub enum GameState {
     Paused,
     Loading,
     Unloading,
+    Countdown,
 }
 
 #[derive(Component)]

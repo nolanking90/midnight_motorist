@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::CameraMarker;
 use crate::{car::*, menu::*};
 use bevy::prelude::*;
@@ -19,6 +21,7 @@ pub struct LevelAssets {
     pub obstacle_speed: f32,
     pub y_values: [f32; 4],
     pub background_texture: Handle<Image>,
+    pub music: Handle<AudioSource>,
 }
 
 pub fn game_over(
@@ -56,12 +59,12 @@ pub fn game_over(
 pub fn next_level(
     mut commands: Commands,
     window: Query<&Window>,
-    camera: Query<&Transform, With<CameraMarker>>,
+    car: Query<&Transform, With<Car>>,
     mut next_state: ResMut<NextState<GameState>>,
     mut level: ResMut<Level>,
 ) {
     let width = window.single().width();
-    let laps = (camera.single().translation.x / (width) / 10.0) as u8;
+    let laps = (car.single().translation.x / (width) / 10.0) as u8;
 
     if laps == 1 {
         commands.spawn((
@@ -92,13 +95,7 @@ pub fn next_level(
 pub fn despawn_level(
     mut commands: Commands,
     old_assets: Query<Entity, (With<LevelAssetMarker>, Without<MenuText>)>,
-    menutext: Query<
-        Entity,
-        (
-            With<MenuText>,
-            Without<LevelAssetMarker>,
-        ),
-    >,
+    menutext: Query<Entity, (With<MenuText>, Without<LevelAssetMarker>)>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
     if !old_assets.is_empty() {
@@ -112,7 +109,6 @@ pub fn despawn_level(
     }
 
     next_state.set(GameState::LoadNextLevel);
-
 }
 
 pub fn load_level(
@@ -146,6 +142,7 @@ pub fn load_level(
                 ],
                 car_texture: asset_server.load("1084.png"),
                 background_texture: asset_server.load("1058.png"),
+                music: asset_server.load("240bps.mp3"),
             };
         }
         2 => {
@@ -165,6 +162,7 @@ pub fn load_level(
                 ],
                 car_texture: asset_server.load("1145.png"),
                 background_texture: asset_server.load("backroads.png"),
+                music: asset_server.load("dui.mp3"),
             };
         }
         3 => {}
@@ -203,7 +201,7 @@ pub fn despawn_loading_screen(
     asset_server: Res<AssetServer>,
     level_assets: Res<LevelAssets>,
     mut next_state: ResMut<NextState<GameState>>,
-    menutext: Query<Entity, With<MenuText>>
+    menutext: Query<Entity, With<MenuText>>,
 ) {
     if asset_server
         .get_load_state(&level_assets.car_texture)
@@ -237,5 +235,98 @@ pub fn despawn_loading_screen(
     if !menutext.is_empty() {
         commands.entity(menutext.single()).despawn();
     }
-    next_state.set(GameState::Running);
+    next_state.set(GameState::Countdown);
+}
+
+#[derive(Component)]
+pub struct Countdown {
+    pub frame_timer: Timer,
+    pub index: usize,
+}
+
+#[derive(Resource, Default)]
+pub struct CountdownAssets {
+    pub images: [Handle<Image>; 4],
+    pub sound: Handle<AudioSource>,
+    pub go_sound: Handle<AudioSource>,
+}
+
+pub fn spawn_countdown_assets(
+    mut countdown_assets: ResMut<CountdownAssets>,
+    asset_server: ResMut<AssetServer>,
+) {
+    countdown_assets.images = [
+        asset_server.load("cd1.png"),
+        asset_server.load("cd2.png"),
+        asset_server.load("cd3.png"),
+        asset_server.load("go.png"),
+    ];
+    countdown_assets.sound = asset_server.load("countdown.wav");
+    countdown_assets.go_sound = asset_server.load("go3.wav");
+
+}
+pub fn start_countdown(
+    mut commands: Commands,
+    countdown_assets: Res<CountdownAssets>,
+    time: Res<Time>,
+    mut next_state: ResMut<NextState<GameState>>,
+    mut timer: Query<(&mut Countdown, &mut UiImage, Entity)>,
+) {
+    if timer.is_empty() {
+        commands.spawn((
+            Countdown {
+                frame_timer: Timer::new(Duration::from_secs_f32(1.0), TimerMode::Repeating),
+                index: 0,
+            },
+            ImageBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    margin: UiRect::horizontal(Val::Auto),
+                    top: Val::Percent(25.0),
+                    left: Val::Percent(33.0),
+                    width: Val::Percent(34.0),
+                    height: Val::Percent(50.0),
+                    ..Default::default()
+                },
+                image: UiImage {
+                    texture: countdown_assets.images[0].clone(),
+                    ..default()
+                },
+                ..default()
+            },
+        ));
+        commands.spawn(AudioBundle {
+            source: countdown_assets.sound.clone(),
+            settings: PlaybackSettings::DESPAWN,
+        });
+
+        return;
+    }
+
+
+    if timer.single().0.frame_timer.paused() {
+        timer.single_mut().0.frame_timer.unpause();
+    }
+
+    timer.single_mut().0.frame_timer.tick(time.delta());
+
+    if timer.single().0.frame_timer.just_finished() {
+
+        if timer.single().0.index == 3 {
+            commands.entity(timer.single().2).despawn();
+            next_state.set(GameState::Running);
+            return;
+        }
+
+        timer.single_mut().0.index += 1;
+        timer.single_mut().1.texture = countdown_assets.images[timer.single().0.index].clone();
+        commands.spawn(AudioBundle {
+            source: match timer.single().0.index {
+                3 => countdown_assets.go_sound.clone(),
+                _ => countdown_assets.sound.clone(),
+            },
+            settings: PlaybackSettings::DESPAWN,
+        });
+    }
+
 }

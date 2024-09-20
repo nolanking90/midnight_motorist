@@ -1,6 +1,6 @@
 use bevy::{prelude::*, time::Time};
 
-use crate::{Car, LevelAssets, LevelAssetMarker};
+use crate::{Car, LevelAssetMarker, LevelAssets};
 
 #[derive(Component)]
 pub struct CameraMarker;
@@ -52,7 +52,7 @@ pub fn spawn_background(
             stretch_value: height / 1080.0,
         },
         Background,
-        LevelAssetMarker
+        LevelAssetMarker,
     ));
     commands.spawn((
         SpriteBundle {
@@ -74,7 +74,7 @@ pub fn spawn_background(
             stretch_value: height / 1080.0,
         },
         Background,
-        LevelAssetMarker
+        LevelAssetMarker,
     ));
     commands.spawn((
         SpriteBundle {
@@ -136,7 +136,7 @@ pub fn update_background(
                 stretch_value: height / 1080.0,
             },
             Background,
-            LevelAssetMarker
+            LevelAssetMarker,
         ));
     }
 }
@@ -349,13 +349,15 @@ pub fn update_speed(
 #[derive(Component)]
 pub struct MusicMarker;
 
-pub fn start_music(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn((
-        AudioBundle {
-            source: asset_server.load("music.mp3"),
-            settings: PlaybackSettings::LOOP,
-        },
-        MusicMarker,
-        LevelAssetMarker
-    ));
+pub fn start_music(mut commands: Commands, assets: Res<LevelAssets>, music: Query<&MusicMarker>) {
+    if music.is_empty() {
+        commands.spawn((
+            AudioBundle {
+                source: assets.music.clone(),
+                settings: PlaybackSettings::LOOP,
+            },
+            MusicMarker,
+            LevelAssetMarker,
+        ));
+    }
 }
