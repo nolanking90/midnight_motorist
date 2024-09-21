@@ -144,8 +144,17 @@ pub fn update_background(
 }
 
 pub fn spawn_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(ImageBundle {
-        style: Style {
+    commands.spawn(
+        TextBundle::from_section(
+            "LAPS",
+            TextStyle {
+                font_size: 45.0,
+                font: asset_server.load("GohuFont11NerdFont-Regular.ttf"),
+                ..default()
+            },
+        )
+        .with_text_justify(JustifyText::Left)
+        .with_style(Style {
             position_type: PositionType::Absolute,
             margin: UiRect::horizontal(Val::Auto),
             top: Val::Percent(50.0 / 1080.0 * 100.0),
@@ -153,16 +162,24 @@ pub fn spawn_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
             width: Val::Percent(5.0),
             height: Val::Percent(5.0),
             ..Default::default()
-        },
-        image: UiImage {
-            texture: asset_server.load("1079.png"),
-            ..default()
-        },
-        ..Default::default()
+        }),
+    );
+    commands.insert_resource(Lap {
+        lap: 0,
+        font: asset_server.load("GohuFont11NerdFont-Regular.ttf"),
     });
 
-    commands.spawn(ImageBundle {
-        style: Style {
+    commands.spawn(
+        TextBundle::from_section(
+            "MPH",
+            TextStyle {
+                font_size: 45.0,
+                font: asset_server.load("GohuFont11NerdFont-Regular.ttf"),
+                ..default()
+            },
+        )
+        .with_text_justify(JustifyText::Left)
+        .with_style(Style {
             position_type: PositionType::Absolute,
             margin: UiRect::horizontal(Val::Auto),
             top: Val::Percent(115.0 / 1080.0 * 100.0),
@@ -170,13 +187,25 @@ pub fn spawn_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
             width: Val::Percent(6.0),
             height: Val::Percent(5.0),
             ..Default::default()
-        },
-        image: UiImage {
-            texture: asset_server.load("1104.png"),
-            ..default()
-        },
-        ..Default::default()
-    });
+        }),
+    );
+
+    //commands.spawn(ImageBundle {
+    //style: Style {
+    //position_type: PositionType::Absolute,
+    //margin: UiRect::horizontal(Val::Auto),
+    //top: Val::Percent(115.0 / 1080.0 * 100.0),
+    //left: Val::Percent(10.0 / 1920.0 * 100.0),
+    //width: Val::Percent(6.0),
+    //height: Val::Percent(5.0),
+    //..Default::default()
+    //},
+    //image: UiImage {
+    //texture: asset_server.load("1104.png"),
+    //..default()
+    //},
+    //..Default::default()
+    //});
 }
 
 #[derive(Resource)]
@@ -194,22 +223,22 @@ pub fn spawn_score(mut commands: Commands, asset_server: Res<AssetServer>) {
         digits.push(asset_server.load((1687 + n).to_string() + ".png"));
     }
 
-    commands.spawn(ImageBundle {
-        style: Style {
-            position_type: PositionType::Absolute,
-            margin: UiRect::horizontal(Val::Auto),
-            top: Val::Percent(50.0 / 1080.0 * 100.0),
-            left: Val::Percent(76.0),
-            width: Val::Percent(12.0),
-            height: Val::Percent(5.0),
-            ..Default::default()
-        },
-        image: UiImage {
-            texture: asset_server.load("2118.png"),
-            ..default()
-        },
-        ..Default::default()
-    });
+    //commands.spawn(ImageBundle {
+    //style: Style {
+    //position_type: PositionType::Absolute,
+    //margin: UiRect::horizontal(Val::Auto),
+    //top: Val::Percent(50.0 / 1080.0 * 100.0),
+    //left: Val::Percent(76.0),
+    //width: Val::Percent(12.0),
+    //height: Val::Percent(5.0),
+    //..Default::default()
+    //},
+    //image: UiImage {
+    //texture: asset_server.load("2118.png"),
+    //..default()
+    //},
+    //..Default::default()
+    //});
     commands.insert_resource(Score { digits, score: 0.0 });
 }
 
@@ -263,40 +292,53 @@ pub fn update_score(
 #[derive(Component)]
 pub struct LapsDigit;
 
+#[derive(Resource)]
+pub struct Lap {
+    pub lap: usize,
+    pub font: Handle<Font>,
+}
+
 pub fn update_laps(
     mut commands: Commands,
     car: Query<&Transform, With<Car>>,
-    score: Res<Score>,
+    mut lap: ResMut<Lap>,
     window: Query<&Window>,
     prev_laps_digit: Query<Entity, With<LapsDigit>>,
 ) {
     let width = window.single().width();
-    let digit = car.single().translation.x / (width) / 10.0;
+    let digit = car.single().translation.x / width / 10.0;
 
-    for prev_digit in prev_laps_digit.iter() {
-        commands.entity(prev_digit).despawn();
-    }
+    if digit as usize > lap.lap || prev_laps_digit.is_empty() {
 
-    commands.spawn((
-        ImageBundle {
-            style: Style {
+        lap.lap = digit as usize;
+
+        for prev_digit in prev_laps_digit.iter() {
+            commands.entity(prev_digit).despawn();
+        }
+
+        commands.spawn((
+            TextBundle::from_section(
+                lap.lap.clone().to_string(),
+                TextStyle {
+                    font_size: 60.0,
+                    font: lap.font.clone(),
+                    ..default()
+                },
+            )
+            .with_text_justify(JustifyText::Left)
+            .with_style(Style {
                 position_type: PositionType::Absolute,
                 margin: UiRect::horizontal(Val::Auto),
-                top: Val::Percent(50.0 / 1080.0 * 100.0),
-                left: Val::Percent(7.5),
+                top: Val::Percent(3.5),
+                left: Val::Percent(8.0),
                 width: Val::Percent(3.0),
                 height: Val::Percent(5.0),
                 ..Default::default()
-            },
-            image: UiImage {
-                texture: score.digits[digit as usize].clone(),
-                ..default()
-            },
-            ..Default::default()
-        },
-        LapsDigit,
-        LevelAssetMarker
-    ));
+            }),
+            LapsDigit,
+            LevelAssetMarker,
+        ));
+    }
 }
 
 #[derive(Component)]

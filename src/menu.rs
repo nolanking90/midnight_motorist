@@ -13,12 +13,13 @@ pub enum GameState {
 #[derive(Component)]
 pub struct MenuText;
 
-pub fn spawn_menu(mut commands: Commands) {
+pub fn spawn_menu(mut commands: Commands, asset_server: ResMut<AssetServer>) {
     commands.spawn((
         TextBundle::from_section(
             "PAUSED",
             TextStyle {
                 font_size: 100.0,
+                font: asset_server.load("GohuFont11NerdFont-Regular.ttf"),
                 ..default()
             },
         )
@@ -41,6 +42,7 @@ pub fn update_menu(
     mut next_state: ResMut<NextState<GameState>>,
     button_input: Res<ButtonInput<KeyCode>>,
     menu_text: Query<Entity, With<MenuText>>,
+    asset_server: ResMut<AssetServer>
 ) {
     if button_input.just_pressed(KeyCode::Escape) {
         match state.get() {
@@ -50,6 +52,7 @@ pub fn update_menu(
                         "PAUSED",
                         TextStyle {
                             font_size: 100.0,
+                            font: asset_server.load("GohuFont11NerdFont-Regular.ttf"),
                             ..default()
                         },
                     )

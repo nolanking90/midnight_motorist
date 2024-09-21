@@ -267,6 +267,7 @@ pub fn spawn_countdown_assets(
     countdown_assets.go_sound = asset_server.load("go3.wav");
 
 }
+
 pub fn start_countdown(
     mut commands: Commands,
     countdown_assets: Res<CountdownAssets>,
