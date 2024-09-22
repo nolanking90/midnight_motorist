@@ -67,7 +67,7 @@ pub fn next_level(
     let width = window.single().width();
     let laps = (car.single().translation.x / (width) / 10.0) as u8;
 
-    if laps == 5 {
+    if laps == 1 {
         commands.spawn((
             TextBundle::from_section(
                 "SUCCESS",
@@ -167,7 +167,27 @@ pub fn load_level(
                 lap_texture: asset_server.load("1077.png"),
             };
         }
-        3 => {}
+        3 => {
+            *assets = LevelAssets {
+                obstacle_height: 105.0,
+                obstacle_width: 135.0,
+                obstacle_speed: 0.0,
+                obstacle_texture: vec![
+                    asset_server.load("1081.png"),
+                    asset_server.load("1082.png"),
+                ],
+                y_values: [
+                    (105.0 / 2.0 + 20.0),
+                    (135.0 + 105.0 / 2.0 + 10.0),
+                    (2.0 * 135.0 + 105.0 / 2.0 + 15.0),
+                    (3.0 * 135.0 + 105.0 / 2.0 - 10.0),
+                ],
+                car_texture: asset_server.load("tank.png"),
+                background_texture: asset_server.load("rainbowroad.png"),
+                music: asset_server.load("dui.mp3"),
+                lap_texture: asset_server.load("1077.png"),
+            };
+        }
         _ => {}
     }
     next_state.set(GameState::Loading);
@@ -265,7 +285,6 @@ pub fn spawn_countdown_assets(
     ];
     countdown_assets.sound = asset_server.load("countdown.wav");
     countdown_assets.go_sound = asset_server.load("go3.wav");
-
 }
 
 pub fn start_countdown(
@@ -306,7 +325,6 @@ pub fn start_countdown(
         return;
     }
 
-
     if timer.single().0.frame_timer.paused() {
         timer.single_mut().0.frame_timer.unpause();
     }
@@ -314,7 +332,6 @@ pub fn start_countdown(
     timer.single_mut().0.frame_timer.tick(time.delta());
 
     if timer.single().0.frame_timer.just_finished() {
-
         if timer.single().0.index == 3 {
             commands.entity(timer.single().2).despawn();
             next_state.set(GameState::Running);
@@ -331,5 +348,4 @@ pub fn start_countdown(
             settings: PlaybackSettings::DESPAWN,
         });
     }
-
 }

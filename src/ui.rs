@@ -189,23 +189,6 @@ pub fn spawn_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..Default::default()
         }),
     );
-
-    //commands.spawn(ImageBundle {
-    //style: Style {
-    //position_type: PositionType::Absolute,
-    //margin: UiRect::horizontal(Val::Auto),
-    //top: Val::Percent(115.0 / 1080.0 * 100.0),
-    //left: Val::Percent(10.0 / 1920.0 * 100.0),
-    //width: Val::Percent(6.0),
-    //height: Val::Percent(5.0),
-    //..Default::default()
-    //},
-    //image: UiImage {
-    //texture: asset_server.load("1104.png"),
-    //..default()
-    //},
-    //..Default::default()
-    //});
 }
 
 #[derive(Resource)]
@@ -222,23 +205,6 @@ pub fn spawn_score(mut commands: Commands, asset_server: Res<AssetServer>) {
     for n in 0..10 {
         digits.push(asset_server.load((1687 + n).to_string() + ".png"));
     }
-
-    //commands.spawn(ImageBundle {
-    //style: Style {
-    //position_type: PositionType::Absolute,
-    //margin: UiRect::horizontal(Val::Auto),
-    //top: Val::Percent(50.0 / 1080.0 * 100.0),
-    //left: Val::Percent(76.0),
-    //width: Val::Percent(12.0),
-    //height: Val::Percent(5.0),
-    //..Default::default()
-    //},
-    //image: UiImage {
-    //texture: asset_server.load("2118.png"),
-    //..default()
-    //},
-    //..Default::default()
-    //});
     commands.insert_resource(Score { digits, score: 0.0 });
 }
 
@@ -309,7 +275,6 @@ pub fn update_laps(
     let digit = car.single().translation.x / width / 10.0;
 
     if digit as usize > lap.lap || prev_laps_digit.is_empty() {
-
         lap.lap = digit as usize;
 
         for prev_digit in prev_laps_digit.iter() {
@@ -347,12 +312,9 @@ pub struct SpeedDigit;
 pub fn update_speed(
     mut commands: Commands,
     cars: Query<&Car>,
-    score: Res<Score>,
+    lap: Res<Lap>,
     prev_speed_digits: Query<Entity, With<SpeedDigit>>,
-    window: Query<&Window>,
 ) {
-    let width = window.single().width();
-
     for prev_digit in prev_speed_digits.iter() {
         commands.entity(prev_digit).despawn();
     }
@@ -362,33 +324,28 @@ pub fn update_speed(
         player_speed = (cars.single().speed.x / 10.0).floor() as u32;
     }
 
-    let speed_string = player_speed.to_string();
-    let temp = speed_string.chars();
-    let mut left_pos = 20.0 + 0.06 * width;
-
-    for char in temp {
-        let digit = char.to_digit(10).unwrap_or_default();
-        commands.spawn((
-            ImageBundle {
-                style: Style {
-                    position_type: PositionType::Absolute,
-                    margin: UiRect::horizontal(Val::Auto),
-                    top: Val::Percent(115.0 / 1080.0 * 100.0),
-                    left: Val::Px(left_pos),
-                    width: Val::Percent(3.0),
-                    height: Val::Percent(5.0),
-                    ..Default::default()
-                },
-                image: UiImage {
-                    texture: score.digits[digit as usize].clone(),
-                    ..default()
-                },
-                ..Default::default()
+    commands.spawn((
+        TextBundle::from_section(
+            player_speed.to_string(),
+            TextStyle {
+                font_size: 50.0,
+                font: lap.font.clone(),
+                ..default()
             },
-            SpeedDigit,
-        ));
-        left_pos += 0.03 * width;
-    }
+        )
+        .with_text_justify(JustifyText::Left)
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            margin: UiRect::horizontal(Val::Auto),
+            top: Val::Percent(10.0),
+            left: Val::Percent(7.0),
+            width: Val::Percent(3.0),
+            height: Val::Percent(5.0),
+            ..Default::default()
+        }),
+        SpeedDigit,
+        LevelAssetMarker,
+    ));
 }
 
 #[derive(Component)]
