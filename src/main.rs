@@ -66,6 +66,6 @@ fn main() {
         .add_systems(Update, spawn_new_obstacles.after(update_obstacles).run_if(in_state(GameState::Running)))
         .add_systems(Update, game_over.run_if(in_state(GameState::Running)))
         .add_systems(Update, next_level.run_if(in_state(GameState::Running)))
-        //.add_systems(Update, detect_collision.run_if(in_state(GameState::Running)))
+        .add_systems(Update, detect_collision.run_if(in_state(GameState::Running)))
         .run();
 }
